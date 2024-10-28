@@ -1,14 +1,3 @@
-# scripts/ir2tab_function.py
-#Let's start by slicing the LLVM IR files into individual functions. 
-# We will write a script that processes the IR file, identifies where each function begins and ends, and then extracts the function body. 
-# Each function will be saved separately or stored in a data structure that can be used later in the pipeline.
-
-#Here’s the plan:
-
-# 1. Identify function definitions (define keyword in LLVM IR).
-# 2. Track the function body (from the define to the closing }).
-# 3. Store each function separately for further processing.
-
 import os
 
 def extract_functions_from_ir(ir_file):
@@ -18,30 +7,31 @@ def extract_functions_from_ir(ir_file):
     """
     functions = []
     current_function = []
+    brace_count = 0
     inside_function = False
 
     with open(ir_file, 'r') as f_in:
         for line in f_in:
             line = line.strip()
 
-            # Check for function start (LLVM IR function starts with "define")
-            if line.startswith("define"):
+            # Start of a function
+            if line.startswith("define") and not inside_function:
                 inside_function = True
-                if current_function:
-                    functions.append(current_function)
-                    current_function = []
-                current_function.append(line)
-            elif line == "}":
-                # End of function
-                current_function.append(line)
-                functions.append(current_function)
-                inside_function = False
-                current_function = []
+                brace_count = line.count('{') - line.count('}')
+                current_function = [line]  # Start collecting the function lines
             elif inside_function:
-                # Collect lines inside the function
+                # Update the brace count
+                brace_count += line.count('{') - line.count('}')
                 current_function.append(line)
 
+                # If brace count reaches zero, function definition is complete
+                if brace_count == 0:
+                    functions.append(current_function)
+                    inside_function = False
+                    current_function = []
+    
     return functions
+
 
 def save_functions(functions, output_dir):
     """
@@ -59,10 +49,10 @@ def save_functions(functions, output_dir):
 
 if __name__ == "__main__":
     # Input IR file
-    ir_file = "../data/raw/sample.ll"
+    ir_file = "../test/sample.ll"
 
     # Output directory where functions will be saved
-    output_dir = "../data/functions/"
+    output_dir = "../test/"
 
     # Step 1: Extract functions
     functions = extract_functions_from_ir(ir_file)
@@ -70,4 +60,3 @@ if __name__ == "__main__":
 
     # Step 2: Save functions to separate files
     save_functions(functions, output_dir)
-

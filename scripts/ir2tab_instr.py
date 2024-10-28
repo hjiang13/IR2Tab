@@ -1,13 +1,5 @@
-# scripts/ir2tab_instr.py
-
-#In LLVM IR, each instruction consists of an opcode (e.g., add, br, ret, etc.) and operands (registers, constants, or memory locations). 
-# We'll write a script to extract these elements from each instruction within the basic blocks.
-
-#Plan for Instruction Extraction:
-# Identify the opcode: Each instruction starts with an opcode, which defines the type of operation (e.g., add, sub, load, store).
-# Extract operands: After the opcode, operands follow, which could be registers, constants, or memory references.
-# Store instructions: We'll store the extracted opcode and operands for each instruction.
-
+from ir2tab_block import extract_basic_blocks_from_function  # Import the basic block extraction
+from ir2tab_function import extract_functions_from_ir  # Import the function extraction
 
 def extract_instructions_from_block(block):
     """
@@ -53,19 +45,18 @@ def print_instructions(instructions):
         print(f"{result} {instr['opcode']} {' '.join(instr['operands'])}")
 
 if __name__ == "__main__":
-    # Example basic block
-    sample_block = {
-        "label": "entry",
-        "instructions": [
-            "%0 = alloca i32, align 4",
-            "store i32 0, i32* %0, align 4",
-            "br label %bb1"
-        ]
-    }
+    # Input IR file
+    ir_file = "../test/sample.ll"  # Adjust this path as needed
 
-    # Extract instructions from the block
-    instructions = extract_instructions_from_block(sample_block)
+    # Extract functions from the IR file
+    functions = extract_functions_from_ir(ir_file)
 
-    # Print instructions in a readable format
-    print("Extracted Instructions:")
-    print_instructions(instructions)
+    # Process each function to extract basic blocks and then instructions
+    for function_idx, function in enumerate(functions):
+        print(f"\nFunction {function_idx}:")
+        basic_blocks = extract_basic_blocks_from_function(function)
+        
+        for block_idx, block in enumerate(basic_blocks):
+            print(f"\nBasic Block {block_idx} ({block['label']}):")
+            instructions = extract_instructions_from_block(block)
+            print_instructions(instructions)
