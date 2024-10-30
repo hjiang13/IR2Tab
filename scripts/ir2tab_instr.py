@@ -1,30 +1,38 @@
+import re
 from ir2tab_block import extract_basic_blocks_from_function  # Import the basic block extraction
 from ir2tab_function import extract_functions_from_ir  # Import the function extraction
 
 def extract_instructions_from_block(block):
     """
     Extracts instructions from a basic block. Each instruction is represented as a
-    dictionary containing the opcode and its operands.
+    dictionary containing the result variable, opcode, and operands.
     """
     instructions = []
-    
+
     for line in block["instructions"]:
         # Ignore labels and comments
-        if line.endswith(":") or line.startswith(";"):
+        if line.endswith(":") or line.startswith(";") or not line:
             continue
 
-        # Split line into parts to get opcode and operands
-        parts = line.split()
-
-        # Check if it's a valid instruction (ignore metadata and alignments)
+        # Split the line based on assignment and instruction part
         if "=" in line:
-            result_var = parts[0]  # E.g., %0 = add i32 %a, %b
-            opcode = parts[2]
-            operands = parts[3:]
+            # Pattern: result = opcode type operand1, type operand2
+            match = re.match(r'(%\S+)\s*=\s*(\S+)\s+(.+)', line)
+            if match:
+                result_var = match.group(1)  # e.g., %9
+                opcode = match.group(2)      # e.g., mul
+                operand_section = match.group(3)
+            else:
+                continue
         else:
+            # For instructions without result assignment (like `br label %bb1`)
             result_var = None
-            opcode = parts[0]  # E.g., br label %bb1
-            operands = parts[1:]
+            parts = line.split(maxsplit=1)
+            opcode = parts[0]
+            operand_section = parts[1] if len(parts) > 1 else ""
+
+        # Extract operands, filtering out type information
+        operands = re.findall(r'%\S+', operand_section)
 
         # Store the instruction as a dictionary
         instruction = {
