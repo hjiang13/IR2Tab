@@ -18,6 +18,7 @@ def extract_basic_blocks_from_function(function_lines):
 
         # Check for basic block label (ends with ":")
         if line.endswith(":"):
+            # Save the current block before starting a new one
             if inside_block:
                 basic_blocks.append(current_block)
                 current_block = {
@@ -25,11 +26,11 @@ def extract_basic_blocks_from_function(function_lines):
                     "instructions": []
                 }
             inside_block = True
-            current_block["label"] = line.strip(":")
+            current_block["label"] = line.strip(":")  # Set the block label
         else:
             # Collect instructions inside the current basic block
             current_block["instructions"].append(line)
-            # Check if this is a terminator instruction (which ends the basic block)
+            # Check if this is a terminator instruction (ends the block)
             if any(term in line for term in ["br", "ret", "switch", "unreachable"]):
                 basic_blocks.append(current_block)
                 current_block = {
@@ -46,13 +47,14 @@ def extract_basic_blocks_from_function(function_lines):
 
 def save_basic_blocks(basic_blocks, function_idx, output_dir):
     """
-    Saves each basic block to a file named function_<idx>_block_<block_idx>.ll
+    Saves each basic block to a file named based on its label and function index.
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     for block_idx, block in enumerate(basic_blocks):
-        output_file = os.path.join(output_dir, f"function_{function_idx}_block_{block_idx}.ll")
+        label = block["label"] if block["label"] else f"block_{block_idx}"
+        output_file = os.path.join(output_dir, f"function_{function_idx}_{label}.ll")
         with open(output_file, 'w') as f_out:
             f_out.write(f"{block['label']}:\n")
             for instruction in block['instructions']:
@@ -72,4 +74,10 @@ if __name__ == "__main__":
     for function_idx, function in enumerate(functions):
         basic_blocks = extract_basic_blocks_from_function(function)
         print(f"Extracted {len(basic_blocks)} basic blocks from function {function_idx}")
+        
+        # Debugging: Print block information
+        for block_idx, block in enumerate(basic_blocks):
+            print(f"Basic Block {block_idx}: Label = {block['label']}, Instructions = {len(block['instructions'])}")
+        
+        # Save the basic blocks to files
         save_basic_blocks(basic_blocks, function_idx, output_dir)

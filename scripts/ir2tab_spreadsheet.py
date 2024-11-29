@@ -28,7 +28,7 @@ def convert_to_csv_with_dependency(functions, output_csv):
         writer = csv.writer(csvfile, delimiter='\t')  # Use tab as a delimiter
 
         # Write header row without any commas
-        writer.writerow(["Instruction #", "Format", "Opcode", "Destination", "r1", "r2"])
+        writer.writerow(["Instruction #", "Format", "Opcode", "Destination", "Operand1", "Operand2", "Formula"])
 
         instruction_counter = 1  # Track instruction numbers
         instruction_cells = {}  # Map result_var to its cell reference
@@ -42,25 +42,20 @@ def convert_to_csv_with_dependency(functions, output_csv):
                 for instr in instructions:
                     opcode = instr['opcode']
                     result_var = instr['result_var'] if instr['result_var'] else "NA"
-                    operands = instr['operands']
+                    operand1 = instr['operand1'] if instr['operand1'] else "NA"
+                    operand2 = instr['operand2'] if instr['operand2'] else "NA"
 
                     # Classify format
                     instr_format = classify_format(opcode)
 
-                    # Create cell references for operands based on previous results
-                    operand_cells = []
-                    for op in operands:
-                        # Replace operand with its cell reference if it exists in the instruction_cells dictionary
-                        operand_cells.append(instruction_cells.get(op, op))
+                    # Map operand1 and operand2 to cell references if available
+                    operand_cells = [
+                        instruction_cells.get(operand1, operand1),
+                        instruction_cells.get(operand2, operand2),
+                    ]
 
-                    # Ensure no commas are present in operand cells or final cell references
+                    # Ensure no commas in cell references
                     operand_cells = [sanitize_for_csv(cell) for cell in operand_cells]
-
-                    # Set r1 and r2 using mapped cell references if available
-                    r1 = operand_cells[0] if len(operand_cells) > 0 else "NA"
-                    r2 = operand_cells[1] if len(operand_cells) > 1 else "NA"
-                    r1 = sanitize_for_csv(r1)
-                    r2 = sanitize_for_csv(r2)
 
                     # Build the dependency formula using the imported function
                     formula = build_dependency_formula(opcode, operand_cells)
@@ -73,7 +68,7 @@ def convert_to_csv_with_dependency(functions, output_csv):
                         instruction_cells[result_var] = result_cell_ref  # Map result_var (e.g., %8) to its cell reference (e.g., D8)
 
                     # Write row data with formula if applicable
-                    row = [instruction_counter, instr_format, opcode, formula, r1, r2]
+                    row = [instruction_counter, instr_format, opcode, result_var, operand1, operand2, formula]
                     sanitized_row = [sanitize_for_csv(str(item)) for item in row]
                     writer.writerow(sanitized_row)
 
@@ -99,4 +94,3 @@ if __name__ == "__main__":
 
     # Convert functions to a CSV with cell-based dependencies
     convert_to_csv_with_dependency(functions, output_csv)
-
