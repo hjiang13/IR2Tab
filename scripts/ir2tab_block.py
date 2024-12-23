@@ -1,4 +1,5 @@
 import os
+import argparse
 from ir2tab_function import extract_functions_from_ir  # Import the function extraction
 
 def extract_basic_blocks_from_function(function_lines):
@@ -61,11 +62,10 @@ def save_basic_blocks(basic_blocks, function_idx, output_dir):
                 f_out.write(instruction + "\n")
         print(f"Saved: {output_file}")
 
-if __name__ == "__main__":
-    # Input IR file
-    ir_file = "../test/sample.ll"  # Update this path as needed
-    output_dir = "../data/basic_blocks/"  # Directory for output basic block files
-
+def main(ir_file, output_dir):
+    """
+    Main logic to extract basic blocks from functions in the given IR file and save them.
+    """
     # Step 1: Extract functions from the IR file
     functions = extract_functions_from_ir(ir_file)
     print(f"Extracted {len(functions)} functions from {ir_file}")
@@ -81,3 +81,15 @@ if __name__ == "__main__":
         
         # Save the basic blocks to files
         save_basic_blocks(basic_blocks, function_idx, output_dir)
+
+if __name__ == "__main__":
+    # Argument parser
+    parser = argparse.ArgumentParser(description="Extract basic blocks from an LLVM IR file.")
+    parser.add_argument("--ir_file", required=True, help="Path to the input LLVM IR file")
+    parser.add_argument("--output_dir", default="../test/basic_blocks/", help="Directory where basic blocks will be saved")
+    
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Call the main function
+    main(args.ir_file, args.output_dir)

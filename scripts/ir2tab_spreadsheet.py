@@ -31,7 +31,7 @@ def convert_to_csv_with_dependency(functions, output_csv):
         writer.writerow(["Instruction #", "Format", "Opcode", "Destination", "Operand1", "Operand2", "Formula"])
 
         instruction_counter = 1  # Track instruction numbers
-        instruction_cells = {}  # Map result_var to its cell reference
+        instruction_cells = {}  # Map destination to its cell reference
 
         for function_idx, function in enumerate(functions):
             basic_blocks = extract_basic_blocks_from_function(function)
@@ -40,15 +40,15 @@ def convert_to_csv_with_dependency(functions, output_csv):
                 instructions = extract_instructions_from_block(block)
                 
                 for instr in instructions:
-                    opcode = instr['opcode']
-                    result_var = instr['result_var'] if instr['result_var'] else "NA"
-                    operand1 = instr['operand1'] if instr['operand1'] else "NA"
-                    operand2 = instr['operand2'] if instr['operand2'] else "NA"
+                    opcode = instr.get('opcode', "unknown")
+                    destination = instr.get('destination', "NA")
+                    operand1 = instr.get('operand1', "NA")
+                    operand2 = instr.get('operand2', "NA")
 
                     # Classify format
                     instr_format = classify_format(opcode)
 
-                    # Map operand1 and operand2 to cell references if available
+                    # Map operands to cell references if available
                     operand_cells = [
                         instruction_cells.get(operand1, operand1),
                         instruction_cells.get(operand2, operand2),
@@ -61,14 +61,14 @@ def convert_to_csv_with_dependency(functions, output_csv):
                     formula = build_dependency_formula(opcode, operand_cells)
                     formula = sanitize_for_csv(formula)
 
-                    # Save the result_var cell reference for future dependencies
+                    # Save the destination cell reference for future dependencies
                     current_row = instruction_counter + 1  # Adjust to match row indexing in Excel
-                    if result_var != "NA":
+                    if destination != "NA":
                         result_cell_ref = f"D{current_row}"
-                        instruction_cells[result_var] = result_cell_ref  # Map result_var (e.g., %8) to its cell reference (e.g., D8)
+                        instruction_cells[destination] = result_cell_ref  # Map destination to cell reference
 
                     # Write row data with formula if applicable
-                    row = [instruction_counter, instr_format, opcode, result_var, operand1, operand2, formula]
+                    row = [instruction_counter, instr_format, opcode, destination, operand1, operand2, formula]
                     sanitized_row = [sanitize_for_csv(str(item)) for item in row]
                     writer.writerow(sanitized_row)
 
@@ -79,18 +79,24 @@ def convert_to_csv_with_dependency(functions, output_csv):
 if __name__ == "__main__":
     # Argument parsing
     parser = argparse.ArgumentParser(description="Convert IR to CSV with dependencies.")
-    parser.add_argument("ir_file", type=str, help="Path to the IR file")
+    parser.add_argument("--ir_file", type=str, help="Path to the IR file")
+    parser.add_argument("--output_dir", type=str, default="../data/processed/", help="Directory to save the output CSV file")
+    
+    # Parse arguments
     args = parser.parse_args()
     
-    # Input IR file
-    ir_file = args.ir_file
+    # Validate the input file path
+    if not os.path.isfile(args.ir_file):
+        print(f"Error: Input file '{args.ir_file}' does not exist.")
+        exit(1)
     
     # Extract functions from the IR
-    functions = extract_functions_from_ir(ir_file)
+    functions = extract_functions_from_ir(args.ir_file)
 
     # Dynamically name the output CSV based on the IR file name
-    base_name = os.path.basename(ir_file).split('.')[0]  # Extract base name without extension
-    output_csv = f"../data/processed/{base_name}_ir_instructions_with_cell_deps.csv"
+    base_name = os.path.basename(args.ir_file).split('.')[0]  # Extract base name without extension
+    output_csv = os.path.join(args.output_dir, f"{base_name}_ir_instructions_with_cell_deps.csv")
 
     # Convert functions to a CSV with cell-based dependencies
     convert_to_csv_with_dependency(functions, output_csv)
+

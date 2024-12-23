@@ -1,4 +1,5 @@
 import os
+import argparse
 
 def extract_functions_from_ir(ir_file):
     """
@@ -47,12 +48,12 @@ def save_functions(functions, output_dir):
                 f_out.write(line + "\n")
         print(f"Saved: {output_file}")
 
-if __name__ == "__main__":
-    # Input IR file
-    ir_file = "../test/sample.ll"
-
-    # Output directory where functions will be saved
-    output_dir = "../test/"
+def main(ir_file, output_dir):
+    """
+    Main logic to process the input IR file.
+    """
+    # Use ir_file
+    print(f"Processing file: {ir_file}")
 
     # Step 1: Extract functions
     functions = extract_functions_from_ir(ir_file)
@@ -60,3 +61,15 @@ if __name__ == "__main__":
 
     # Step 2: Save functions to separate files
     save_functions(functions, output_dir)
+
+if __name__ == "__main__":
+    # Argument parser
+    parser = argparse.ArgumentParser(description="Extract functions from an LLVM IR file.")
+    parser.add_argument("--ir_file", required=True, help="Path to the input LLVM IR file")
+    parser.add_argument("--output_dir", default="../test/", help="Directory where functions will be saved")
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    # Call the main function
+    main(args.ir_file, args.output_dir)
