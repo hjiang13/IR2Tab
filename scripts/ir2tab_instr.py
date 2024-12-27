@@ -8,6 +8,16 @@ import re
 
 import re
 
+# Debug flag (set to True to enable debugging output)
+DEBUG = False
+
+def debug_print(message):
+    """
+    Prints debug messages only if debugging is enabled.
+    """
+    if DEBUG:
+        print(message)
+
 def extract_instructions_from_block(block):
     """
     Extracts instructions from a basic block. Each instruction is represented as a
@@ -20,6 +30,9 @@ def extract_instructions_from_block(block):
         if line.endswith(":") or line.startswith(";") or not line.strip():
             continue
 
+        # Debug: Print the current line
+        debug_print(f"Processing line: {line}")
+
         # Initialize variables
         destination = None
         opcode = None
@@ -28,8 +41,21 @@ def extract_instructions_from_block(block):
 
         # Handle lines with an assignment (e.g., %1 = ...)
         if "=" in line:
+            # Match function calls
+            if "call" in line:
+                debug_print("Detected 'call' in line.")
+                opcode = "call"
+                # Updated regex to match call instructions
+                match = re.match(r'(?:%(\S+))?\s*=\s*call\s+(\S+)\s*(?:\(([^)]*)\))?\s*@(\w+)\(([^)]*)\)', line)
+                if match:
+                    debug_print("Regex match found: match.groups()")
+                    destination = match.group(1) if match.group(1) else "void"
+                    operands = [match.group(4)] + match.group(5).split(", ") if match.group(5) else []
+                else:
+                    debug_print("Regex match failed for 'call'.")
+
             # Match memory operations like `alloca`
-            if "alloca" in line:
+            elif "alloca" in line:
                 match = re.match(r'(%\S+)\s*=\s*alloca\s+(\S+)(?:,\s*align\s*(\d+))?', line)
                 if match:
                     destination = match.group(1)  # e.g., %1
@@ -38,16 +64,13 @@ def extract_instructions_from_block(block):
                     additional = match.group(3) if match.group(3) else "NA"  # e.g., align 4
 
             # Match arithmetic and logical operations
-            # e.g. %28 = add nsw i32 %27, %26
             elif any(op in line for op in ["add", "sub", "mul", "and", "or"]):
                 match = re.match(r'(%\S+)\s*=\s*(\S+)\s*(\S+)?\s+\S+\s+(%\S+),\s+(%\S+)', line)
                 if match:
                     destination = match.group(1)  # %28
                     opcode = match.group(2)       # add
-                    flags = match.group(3) if match.group(3) else "NA"  # nsw
-                    operands= [match.group(4), match.group(5)]  #27%, 26%  
-
-            #Parses an `icmp` instruction.
+                    operands = [match.group(4), match.group(5)]
+            #Parses an icmp instruction.
             # Pattern: %result = icmp <predicate> <type> <operand1>, <operand2>
             elif ("icmp" or "cmp" in line):
                 match = re.match(r'(%\S+)\s*=\s*icmp\s+(\S+)\s+(\S+)\s+(%\S+),\s+(%\S+)', line)
@@ -56,29 +79,47 @@ def extract_instructions_from_block(block):
                     opcode = "icmp"    # e.g., sle
                     value_type = match.group(3)   # e.g., i32
                     operands = [match.group(4), match.group(5)]     # e.g., %9, %10
-
-
-            # Match function calls
-            elif "call" in line:
-                match = re.match(r'(%\S+)?\s*=\s*call\s+\S+\s+\@(\S+)\((.*)\)', line)
+            
+            # Match `load` instructions
+            if "load" in line:
+                debug_print("Detected 'load' in line.")
+                match = re.match(r'(%\S+)\s*=\s*load\s+(\S+),\s+(\S+\s+%\S+)(?:,\s*align\s*(\d+))?', line)
                 if match:
-                    destination = match.group(1) if match.group(1) else "NA"
-                    opcode = "call"
-                    operands = match.group(3).split(", ") if match.group(3) else []
+                    destination = match.group(1)  # e.g., %9
+                    opcode = "load"
+                    operands = [match.group(3)]  # e.g., ptr %3
+                    additional = match.group(4) if match.group(4) else "NA"  # e.g., align 4
 
         else:
             # Handle lines without an assignment (e.g., br, ret)
-            if line.startswith("br"):
-                match = re.match(r'br\s+\S+\s+(\S+),\s+label\s+(\S+),\s+label\s+(\S+)', line)
+            if "br label" in line:
+                match = re.match(r'br\s+label\s+(%\S+)', line)
                 if match:
                     opcode = "br"
-                    operands = [match.group(1), match.group(2), match.group(3)]
-
+                    operands = [match.group(1)]
+            elif "br i1" in line:
+                match = re.match(r'br\s+i1\s+(%\S+),\s+label\s+(%\S+),\s+label\s+(%\S+)', line)
+                if match:
+                    opcode = "br"
+                    destination = match.group(1)
+                    operands = [match.group(2), match.group(3)]
+            #Parse a store insruction
+            # Pattern: store <type> <value>, <type>* <destination>[, align <alignment>]
+            elif "store" in line:
+                match = re.match(r'store\s+(\S+)\s+(\S+),\s+\S+\s+(%\S+)(?:,\s*align\s*(\d+))?', line)
+                if match:
+                    opcode = "store"  
+                    destination = match.group(3)     # 目标地址，例如 %1
+                    #alignment = match.group(4) if match.group(4) else "NA"  # 对齐方式，例如 4
             elif line.startswith("ret"):
                 match = re.match(r'ret\s+\S+\s+(\S+)', line)
                 if match:
                     opcode = "ret"
                     operands = [match.group(1)]
+
+        # Debug: Print parsing results
+        if opcode:
+            debug_print(f"Parsed Instruction - Opcode: {opcode}, Destination: {destination}, Operands: {operands}")
 
         # Ensure opcode is recognized
         if not opcode:
@@ -86,10 +127,10 @@ def extract_instructions_from_block(block):
 
         # Store the instruction as a dictionary
         instruction = {
-            "destination": destination,  # The result variable
-            "opcode": opcode,            # The opcode
-            "operands": operands,        # Operands (variables/constants)
-            "additional": additional     # Additional fields like align
+            "destination": destination,
+            "opcode": opcode,
+            "operands": operands,
+            "additional": additional
         }
         instructions.append(instruction)
 
