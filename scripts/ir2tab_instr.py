@@ -44,13 +44,17 @@ def extract_instructions_from_block(block):
             # Match function calls
             if "call" in line:
                 debug_print("Detected 'call' in line.")
-                opcode = "call"
                 # Updated regex to match call instructions
-                match = re.match(r'(?:%(\S+))?\s*=\s*call\s+(\S+)\s*(?:\(([^)]*)\))?\s*@(\w+)\(([^)]*)\)', line)
+                match = re.match(r'(%\S+)?\s*=\s*call\s+\S+\s+\S+\s+@(\w+)\((.*)\)', line)
                 if match:
                     debug_print("Regex match found: match.groups()")
-                    destination = match.group(1) if match.group(1) else "void"
-                    operands = [match.group(4)] + match.group(5).split(", ") if match.group(5) else []
+                    destination = match.group(1) if match.group(1) else "void"  # e.g., %28
+                    operator_name = match.group(2)  # e.g., _Z1fii
+                    opcode = f"call {operator_name}"  # Combine 'call' with the function name
+                    operand_section = match.group(3)  # e.g., "i32 noundef %26, i32 noundef %27"
+        
+                    # Extract operands by filtering out types and qualifiers
+                    operands = re.findall(r'%\S+', operand_section)  # e.g., [%26, %27]
                 else:
                     debug_print("Regex match failed for 'call'.")
 
