@@ -9,7 +9,7 @@ import re
 import re
 
 # Debug flag (set to True to enable debugging output)
-DEBUG = False
+DEBUG = True
 
 def debug_print(message):
     """
@@ -58,7 +58,7 @@ def extract_instructions_from_block(block):
                 else:
                     debug_print("Regex match failed for 'call'.")
 
-            # Match memory operations like `alloca`
+            # Match memory operations like alloca
             elif "alloca" in line:
                 match = re.match(r'(%\S+)\s*=\s*alloca\s+(\S+)(?:,\s*align\s*(\d+))?', line)
                 if match:
@@ -84,7 +84,7 @@ def extract_instructions_from_block(block):
                     value_type = match.group(3)   # e.g., i32
                     operands = [match.group(4), match.group(5)]     # e.g., %9, %10
             
-            # Match `load` instructions
+            # Match load instructions
             if "load" in line:
                 debug_print("Detected 'load' in line.")
                 match = re.match(r'(%\S+)\s*=\s*load\s+(\S+),\s+(\S+\s+%\S+)(?:,\s*align\s*(\d+))?', line)
@@ -93,6 +93,21 @@ def extract_instructions_from_block(block):
                     opcode = "load"
                     operands = [match.group(3)]  # e.g., ptr %3
                     additional = match.group(4) if match.group(4) else "NA"  # e.g., align 4
+
+            elif "pred" in line:
+                debug_print("Detected basic block header in line.")
+                # Regex to match basic block label and predecessors
+                match = re.match(r'(\d+):\s*(?:;\s*preds\s*=\s*(.*))?', line)
+                if match:
+                    opcode = "BB label"  # Set the operator to indicate a basic block label
+                    destination = f"BB-{match.group(1)}"  # e.g., BB-8 or BB-12
+                    # Extract operands (predecessor blocks)
+                    preds_section = match.group(2)  # e.g., "%36, %0"
+                    if preds_section:
+                        operands = [f"BB-{pred.strip().lstrip('%')}" for pred in preds_section.split(",")]
+                    else:
+                        operands = []  # No predecessors
+
 
         else:
             # Handle lines without an assignment (e.g., br, ret)
@@ -123,29 +138,16 @@ def extract_instructions_from_block(block):
             elif line.startswith("define"):
                 debug_print("Detected 'define' in line.")
                 # Regex to match function definition
-                match = re.match(r'define\s+\S+\s+(\S+)\((.*)\)', line)
+                match = re.match(r'define\s+(?:[\w\s]+)\s+(\S+)\s+@(\w+)\(([^)]*)\)\s*#\d+\s*\{', line)
                 if match:
                     opcode = "Function define"  # Set the operator to indicate a function definition
-                    destination = match.group(1)  # e.g., @_Z1fii
+                    destination = match.group(2)  # e.g., @_Z1fii
                     # Extract operands (function parameters)
-                    params_section = match.group(2)  # e.g., "i32 noundef %0, i32 noundef %1"
-                    operands = re.findall(r'%\S+', params_section)  # Extract only the variables (e.g., [%0, %1])
+                    params_section = match.group(3)  # e.g., "i32 noundef %0, i32 noundef %1"
+                    operands = re.findall(r'%\w+', params_section)  # Extract only the variables (e.g., [%0, %1])
                 else:
                     debug_print("Regex match failed for 'define'.")
-            elif line.endswith(":"):
-                debug_print("Detected basic block header in line.")
-                # Regex to match basic block label and predecessors
-                match = re.match(r'(\d+):\s*(?:;\s*preds\s*=\s*(.*))?', line)
-                if match:
-                    opcode = "BB label"  # Set the operator to indicate a basic block label
-                    destination = f"BB-{match.group(1)}"  # e.g., BB-8 or BB-12
-                    # Extract operands (predecessor blocks)
-                    preds_section = match.group(2)  # e.g., "%36, %0"
-                    if preds_section:
-                        operands = [f"BB-{pred.strip('%')}" for pred in preds_section.split(",")]
-                    else:
-                        operands = []  # No predecessors
-
+            
         # Debug: Print parsing results
         if opcode:
             debug_print(f"Parsed Instruction - Opcode: {opcode}, Destination: {destination}, Operands: {operands}")
@@ -205,4 +207,3 @@ if __name__ == "__main__":
 
     # Call the main function
     main(args.ir_file)
-
