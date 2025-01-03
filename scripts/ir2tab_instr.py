@@ -9,7 +9,7 @@ import re
 import re
 
 # Debug flag (set to True to enable debugging output)
-DEBUG = True
+DEBUG = False
 
 def debug_print(message):
     """

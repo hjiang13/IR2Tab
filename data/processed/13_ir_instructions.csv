@@ -1,0 +1,116 @@
+Instruction ID,Basic Block ID,Operator,Destination,Operand 1,Operand 2,Additional Fields,Dependencies
+I1,None,Function define,main,NA,NA,NA,
+I2,None,alloca,%1,i32,NA,NA,i32
+I3,None,alloca,%2,i32,NA,NA,i32
+I4,None,alloca,%3,i32,NA,NA,i32
+I5,None,alloca,%4,i32,NA,NA,i32
+I6,None,alloca,%5,i32,NA,NA,i32
+I7,None,alloca,%6,i32,NA,NA,i32
+I8,None,store,%1,NA,NA,NA,
+I9,None,store,%6,NA,NA,NA,
+I10,None,unknown,None,NA,NA,NA,
+I11,None,store,%3,NA,NA,NA,
+I12,None,br label,None,%8,NA,NA,%8
+I13,None,BB label,BB-8,BB-36,BB-0,NA,BB-36 BB-0
+I14,None,load,%9,ptr %3,NA,NA,ptr %3
+I15,None,load,%10,ptr %5,NA,NA,ptr %5
+I16,None,icmp,%11,%9,%10,NA,I14 I15
+I17,None,br i1,%11,%12,%39,NA,%12 %39
+I18,None,BB label,BB-12,BB-8,NA,NA,I13
+I19,None,unknown,None,NA,NA,NA,
+I20,None,store,%4,NA,NA,NA,
+I21,None,br label,None,%14,NA,NA,%14
+I22,None,BB label,BB-14,BB-30,BB-12,NA,BB-30 I18
+I23,None,load,%15,ptr %4,NA,NA,ptr %4
+I24,None,load,%16,ptr %2,NA,NA,ptr %2
+I25,None,icmp,%17,%15,%16,NA,I23 I24
+I26,None,br i1,%17,%18,%33,NA,%18 %33
+I27,None,BB label,BB-18,BB-14,NA,NA,I22
+I28,None,load,%19,ptr %2,NA,NA,ptr %2
+I29,None,load,%20,ptr %4,NA,NA,ptr %4
+I30,None,unknown,None,NA,NA,NA,
+I31,None,unknown,None,NA,NA,NA,
+I32,None,br i1,%22,%23,%29,NA,%23 %29
+I33,None,BB label,BB-23,BB-18,NA,NA,I27
+I34,None,load,%24,ptr %2,NA,NA,ptr %2
+I35,None,load,%25,ptr %4,NA,NA,ptr %4
+I36,None,call _Z1fii,%26,%24,%25,NA,%24 I35
+I37,None,load,%27,ptr %6,NA,NA,ptr %6
+I38,None,add,%28,%27,%26,NA,I37 I36
+I39,None,store,%6,NA,NA,NA,
+I40,None,br label,None,%29,NA,NA,%29
+I41,None,BB label,BB-29,BB-23,BB-18,NA,I33 I27
+I42,None,br label,None,%30,NA,NA,%30
+I43,None,BB label,BB-30,BB-29,NA,NA,I41
+I44,None,load,%31,ptr %4,NA,NA,ptr %4
+I45,None,unknown,None,NA,NA,NA,
+I46,None,store,%4,NA,NA,NA,
+I47,None,br label,None,%14,NA,NA,%14
+I48,None,BB label,BB-33,BB-14,NA,NA,I22
+I49,None,load,%34,ptr %6,NA,NA,ptr %6
+I50,None,unknown,None,NA,NA,NA,
+I51,None,store,%6,NA,NA,NA,
+I52,None,br label,None,%36,NA,NA,%36
+I53,None,BB label,BB-36,BB-33,NA,NA,I48
+I54,None,load,%37,ptr %3,NA,NA,ptr %3
+I55,None,unknown,None,NA,NA,NA,
+I56,None,store,%3,NA,NA,NA,
+I57,None,br label,None,%8,NA,NA,%8
+I58,None,BB label,BB-39,BB-8,NA,NA,I13
+I59,None,ret,None,0,NA,NA,0
+I60,None,unknown,None,NA,NA,NA,
+I61,None,Function define,_Z1fii,%0,%1,NA,%0 I2
+I62,None,alloca,%3,i32,NA,NA,i32
+I63,None,alloca,%4,i32,NA,NA,i32
+I64,None,alloca,%5,i32,NA,NA,i32
+I65,None,alloca,%6,i32,NA,NA,i32
+I66,None,store,%3,NA,NA,NA,
+I67,None,store,%4,NA,NA,NA,
+I68,None,store,%6,NA,NA,NA,
+I69,None,load,%7,ptr %4,NA,NA,ptr %4
+I70,None,load,%8,ptr %3,NA,NA,ptr %3
+I71,None,icmp,%9,%7,%8,NA,I69 I70
+I72,None,br i1,%9,%10,%11,NA,I15 I17
+I73,None,BB label,BB-10,BB-2,NA,NA,BB-2
+I74,None,store,%6,NA,NA,NA,
+I75,None,br label,None,%36,NA,NA,%36
+I76,None,BB label,BB-11,BB-2,NA,NA,BB-2
+I77,None,load,%12,ptr %3,NA,NA,ptr %3
+I78,None,load,%13,ptr %4,NA,NA,ptr %4
+I79,None,unknown,None,NA,NA,NA,
+I80,None,store,%3,NA,NA,NA,
+I81,None,load,%15,ptr %4,NA,NA,ptr %4
+I82,None,store,%5,NA,NA,NA,
+I83,None,br label,None,%16,NA,NA,I24
+I84,None,BB label,BB-16,BB-32,BB-11,NA,BB-32 I76
+I85,None,load,%17,ptr %5,NA,NA,ptr %5
+I86,None,load,%18,ptr %3,NA,NA,ptr %3
+I87,None,icmp,%19,%17,%18,NA,I85 I86
+I88,None,br i1,%19,%20,%35,NA,I29 %35
+I89,None,BB label,BB-20,BB-16,NA,NA,I84
+I90,None,load,%21,ptr %3,NA,NA,ptr %3
+I91,None,load,%22,ptr %5,NA,NA,ptr %5
+I92,None,unknown,None,NA,NA,NA,
+I93,None,unknown,None,NA,NA,NA,
+I94,None,br i1,%24,%25,%31,NA,I35 I44
+I95,None,BB label,BB-25,BB-20,NA,NA,I89
+I96,None,load,%26,ptr %3,NA,NA,ptr %3
+I97,None,load,%27,ptr %5,NA,NA,ptr %5
+I98,None,call _Z1fii,%28,%26,%27,NA,%26 I97
+I99,None,load,%29,ptr %6,NA,NA,ptr %6
+I100,None,add,%30,%29,%28,NA,I99 I98
+I101,None,store,%6,NA,NA,NA,
+I102,None,br label,None,%31,NA,NA,I44
+I103,None,BB label,BB-31,BB-25,BB-20,NA,I95 I89
+I104,None,br label,None,%32,NA,NA,%32
+I105,None,BB label,BB-32,BB-31,NA,NA,I103
+I106,None,load,%33,ptr %5,NA,NA,ptr %5
+I107,None,unknown,None,NA,NA,NA,
+I108,None,store,%5,NA,NA,NA,
+I109,None,br label,None,%16,NA,NA,%16
+I110,None,BB label,BB-35,BB-16,NA,NA,I84
+I111,None,br label,None,%36,NA,NA,%36
+I112,None,BB label,BB-36,BB-35,BB-10,NA,I110 I73
+I113,None,load,%37,ptr %6,NA,NA,ptr %6
+I114,None,ret,None,%37,NA,NA,I113
+I115,None,unknown,None,NA,NA,NA,
