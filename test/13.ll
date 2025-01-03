@@ -8,7 +8,7 @@ module asm ".globl _ZSt21ios_base_library_initv"
 @.str = private unnamed_addr constant [3 x i8] c"%d\00", align 1
 @.str.1 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
-; Function Attrs: mustprogress noinline norecurse optnone uwtable
+;  Function Attrs: mustprogress noinline norecurse optnone uwtable
 define dso_local noundef i32 @main() #0 {
   %1 = alloca i32, align 4
   %2 = alloca i32, align 4

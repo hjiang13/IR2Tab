@@ -99,12 +99,12 @@ def extract_instructions_from_block(block):
             if "br label" in line:
                 match = re.match(r'br\s+label\s+(%\S+)', line)
                 if match:
-                    opcode = "br"
+                    opcode = "br label"
                     operands = [match.group(1)]
             elif "br i1" in line:
                 match = re.match(r'br\s+i1\s+(%\S+),\s+label\s+(%\S+),\s+label\s+(%\S+)', line)
                 if match:
-                    opcode = "br"
+                    opcode = "br i1"
                     destination = match.group(1)
                     operands = [match.group(2), match.group(3)]
             #Parse a store insruction
@@ -120,6 +120,31 @@ def extract_instructions_from_block(block):
                 if match:
                     opcode = "ret"
                     operands = [match.group(1)]
+            elif line.startswith("define"):
+                debug_print("Detected 'define' in line.")
+                # Regex to match function definition
+                match = re.match(r'define\s+\S+\s+(\S+)\((.*)\)', line)
+                if match:
+                    opcode = "Function define"  # Set the operator to indicate a function definition
+                    destination = match.group(1)  # e.g., @_Z1fii
+                    # Extract operands (function parameters)
+                    params_section = match.group(2)  # e.g., "i32 noundef %0, i32 noundef %1"
+                    operands = re.findall(r'%\S+', params_section)  # Extract only the variables (e.g., [%0, %1])
+                else:
+                    debug_print("Regex match failed for 'define'.")
+            elif line.endswith(":"):
+                debug_print("Detected basic block header in line.")
+                # Regex to match basic block label and predecessors
+                match = re.match(r'(\d+):\s*(?:;\s*preds\s*=\s*(.*))?', line)
+                if match:
+                    opcode = "BB label"  # Set the operator to indicate a basic block label
+                    destination = f"BB-{match.group(1)}"  # e.g., BB-8 or BB-12
+                    # Extract operands (predecessor blocks)
+                    preds_section = match.group(2)  # e.g., "%36, %0"
+                    if preds_section:
+                        operands = [f"BB-{pred.strip('%')}" for pred in preds_section.split(",")]
+                    else:
+                        operands = []  # No predecessors
 
         # Debug: Print parsing results
         if opcode:
